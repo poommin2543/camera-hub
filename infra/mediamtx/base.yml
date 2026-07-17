@@ -1,0 +1,34 @@
+logLevel: info
+logDestinations: [stdout]
+readTimeout: 10s
+writeTimeout: 10s
+api: yes
+apiAddress: :9997
+metrics: yes
+metricsAddress: :9998
+authMethod: http
+authHTTPAddress: http://app:3000/api/internal/mediamtx/auth
+authHTTPExclude:
+  - action: api
+  - action: metrics
+  - action: read
+    path: ~^_internal/raw/
+  - action: publish
+    path: ~^view/
+rtsp: yes
+rtspAddress: :8554
+hls: yes
+hlsAddress: :8888
+hlsVariant: lowLatency
+hlsAlwaysRemux: no
+webrtc: yes
+webrtcAddress: :8889
+webrtcLocalUDPAddress: :8189
+webrtcLocalTCPAddress: :8189
+pathDefaults:
+  sourceOnDemand: yes
+  sourceOnDemandStartTimeout: 15s
+  sourceOnDemandCloseAfter: 30s
+  maxReaders: 40
+  record: no
+paths: {}

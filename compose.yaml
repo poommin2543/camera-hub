@@ -1,0 +1,91 @@
+name: camera-hub
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: camera_hub
+      POSTGRES_USER: camera_hub
+      POSTGRES_PASSWORD_FILE: /run/secrets/postgres_password
+    secrets: [postgres_password]
+    volumes: [postgres_data:/var/lib/postgresql/data]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U camera_hub -d camera_hub"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    networks: [control]
+
+  app:
+    build: .
+    env_file: .env
+    secrets: [camera_encryption_key, media_signing_secret, internal_service_secret]
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks: [control]
+    read_only: true
+    tmpfs: [/tmp]
+    security_opt: [no-new-privileges:true]
+
+  media-controller:
+    build:
+      context: .
+      dockerfile: services/media-controller/Dockerfile
+    env_file: .env
+    secrets: [camera_encryption_key, media_signing_secret, internal_service_secret]
+    volumes:
+      - media_runtime:/runtime
+      - ./secrets/internal_service_secret:/run/secrets/internal_service_secret:ro
+    depends_on: [postgres, mediamtx]
+    networks: [control, camera]
+    security_opt: [no-new-privileges:true]
+
+  mediamtx:
+    image: bluenviron/mediamtx:1.15.6-ffmpeg
+    volumes:
+      - ./infra/mediamtx/base.yml:/mediamtx.yml:ro
+      - media_runtime:/runtime:ro
+    expose: [8554, 8888, 8889, 9997, 9998]
+    ports:
+      - "8189:8189/udp"
+      - "8189:8189/tcp"
+    networks: [control, camera]
+    security_opt: [no-new-privileges:true]
+
+  caddy:
+    image: caddy:2.10.2-alpine
+    volumes:
+      - ./infra/caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+    ports: ["8080:8080"]
+    depends_on: [app, mediamtx]
+    networks: [control]
+    read_only: true
+    tmpfs: [/config, /data]
+    security_opt: [no-new-privileges:true]
+
+  simulator:
+    profiles: [simulator]
+    image: bluenviron/mediamtx:1.15.6-ffmpeg
+    volumes:
+      - ./simulator/mediamtx.yml:/mediamtx.yml:ro
+    networks: [camera]
+
+networks:
+  control:
+  camera:
+    internal: true
+
+volumes:
+  postgres_data:
+  media_runtime:
+
+secrets:
+  postgres_password:
+    file: ./secrets/postgres_password
+  camera_encryption_key:
+    file: ./secrets/camera_encryption_key
+  media_signing_secret:
+    file: ./secrets/media_signing_secret
+  internal_service_secret:
+    file: ./secrets/internal_service_secret

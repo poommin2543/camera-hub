@@ -1,0 +1,15 @@
+paths:
+  h264:
+    runOnInit: >-
+      ffmpeg -re -f lavfi -i testsrc2=size=1280x720:rate=15
+      -f lavfi -i sine=frequency=880:sample_rate=48000
+      -c:v libx264 -preset veryfast -tune zerolatency -pix_fmt yuv420p
+      -g 30 -bf 0 -c:a aac -f rtsp rtsp://localhost:8554/h264
+    runOnInitRestart: yes
+  h265:
+    runOnInit: >-
+      ffmpeg -re -f lavfi -i testsrc2=size=1280x720:rate=15
+      -f lavfi -i sine=frequency=440:sample_rate=48000
+      -c:v libx265 -preset ultrafast -x265-params keyint=30:bframes=0
+      -c:a aac -f rtsp rtsp://localhost:8554/h265
+    runOnInitRestart: yes

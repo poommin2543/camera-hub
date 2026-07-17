@@ -1,0 +1,9 @@
+tunnel: REPLACE_WITH_TUNNEL_ID
+credentials-file: /run/secrets/cloudflared_credentials
+
+ingress:
+  - hostname: camera.example.com
+    service: http://caddy:8080
+    originRequest:
+      noTLSVerify: false
+  - service: http_status:404

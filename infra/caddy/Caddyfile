@@ -1,0 +1,47 @@
+:8080 {
+  encode zstd gzip
+
+  @hls path /media/hls/*
+  handle @hls {
+    uri strip_prefix /media/hls
+    reverse_proxy mediamtx:8888 {
+      header_up -Cookie
+      header_up Authorization "Bearer {query.token}"
+    }
+  }
+
+  @webrtc path /media/webrtc/*
+  handle @webrtc {
+    uri strip_prefix /media/webrtc
+    reverse_proxy mediamtx:8889 {
+      header_up -Cookie
+      header_up Authorization "Bearer {query.token}"
+    }
+  }
+
+  handle {
+    reverse_proxy app:3000
+  }
+
+  header {
+    -Server
+    X-Content-Type-Options nosniff
+    X-Frame-Options DENY
+    Referrer-Policy no-referrer
+    Permissions-Policy "camera=(), microphone=(), geolocation=()"
+  }
+
+  log {
+    output stdout
+    format filter {
+      wrap json
+      fields {
+        request>headers>Cookie delete
+        request>headers>Authorization delete
+        request>uri query {
+          replace token REDACTED
+        }
+      }
+    }
+  }
+}

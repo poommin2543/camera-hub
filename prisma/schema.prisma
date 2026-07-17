@@ -1,0 +1,111 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  VIEWER
+}
+
+enum RtspTransport {
+  TCP
+  AUTOMATIC
+}
+
+enum CameraStatus {
+  UNKNOWN
+  PROBING
+  ONLINE
+  OFFLINE
+  ERROR
+}
+
+enum TranscodeMode {
+  UNKNOWN
+  COPY_H264
+  TRANSCODE_SOFTWARE
+  TRANSCODE_HARDWARE
+}
+
+model User {
+  id                 String    @id @default(cuid())
+  email              String    @unique
+  displayName        String
+  passwordHash       String
+  role               Role      @default(VIEWER)
+  canListenAudio     Boolean   @default(false)
+  isActive           Boolean   @default(true)
+  sessionVersion     Int       @default(1)
+  failedLoginCount   Int       @default(0)
+  lockedUntil        DateTime?
+  lastLoginAt        DateTime?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+  sessions           Session[]
+  camerasCreated     Camera[]  @relation("CameraCreatedBy")
+  camerasUpdated     Camera[]  @relation("CameraUpdatedBy")
+  auditLogs          AuditLog[]
+}
+
+model Session {
+  sessionToken   String   @unique
+  userId         String
+  expires        DateTime
+  sessionVersion Int
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model Camera {
+  id                 String          @id @default(cuid())
+  name               String
+  description        String?
+  enabled            Boolean         @default(true)
+  secretCiphertext   String
+  secretKeyVersion   Int             @default(1)
+  rtspTransport      RtspTransport   @default(TCP)
+  approvedHost       String
+  approvedPort       Int
+  videoCodec         String?
+  audioCodec         String?
+  width              Int?
+  height             Int?
+  fps                Float?
+  hasBFrames         Boolean?
+  hasAudio           Boolean?
+  transcodeMode      TranscodeMode   @default(UNKNOWN)
+  status             CameraStatus    @default(UNKNOWN)
+  statusReasonCode   String?
+  lastProbeAt        DateTime?
+  configRevision     Int             @default(1)
+  appliedRevision    Int             @default(0)
+  createdById        String
+  updatedById        String
+  createdAt          DateTime        @default(now())
+  updatedAt          DateTime        @updatedAt
+  createdBy          User            @relation("CameraCreatedBy", fields: [createdById], references: [id])
+  updatedBy          User            @relation("CameraUpdatedBy", fields: [updatedById], references: [id])
+
+  @@index([enabled, status])
+}
+
+model AuditLog {
+  id          String   @id @default(cuid())
+  actorUserId String?
+  action      String
+  targetType  String
+  targetId    String?
+  metadata    Json?
+  ipHash      String?
+  createdAt   DateTime @default(now())
+  actor       User?    @relation(fields: [actorUserId], references: [id], onDelete: SetNull)
+
+  @@index([createdAt])
+  @@index([actorUserId])
+}
