@@ -34,6 +34,12 @@ button, a, input { touch-action: manipulation; }
 .page-heading p:last-child { margin-top: .25rem; color: #94a3b8; }
 .primary-button { display: inline-flex; min-height: 44px; cursor: pointer; align-items: center; gap: .5rem; border-radius: .5rem; background: #2563eb; padding: 0 1rem; font-weight: 600; color: white; transition: background-color 180ms ease; }
 .primary-button:hover { background: #3b82f6; }
+.action-button, .danger-button { display: inline-flex; min-height: 40px; cursor: pointer; align-items: center; gap: .4rem; border: 1px solid #334155; border-radius: .5rem; padding: 0 .7rem; font-size: .75rem; font-weight: 600; transition: background-color 180ms ease, border-color 180ms ease; }
+.action-button { background: #0f172a; color: #e2e8f0; }
+.action-button:hover { border-color: #60a5fa; background: #1e293b; }
+.danger-button { border-color: #7f1d1d; background: #450a0a; color: #fecaca; }
+.danger-button:hover { background: #7f1d1d; }
+.action-button:disabled, .danger-button:disabled { cursor: not-allowed; opacity: .45; }
 .table-card { overflow-x: auto; border: 1px solid var(--border); border-radius: .75rem; background: #0f172a; }
 table { width: 100%; border-collapse: collapse; text-align: left; }
 th { padding: .8rem 1rem; font-family: var(--font-fira-code), monospace; font-size: .7rem; font-weight: 500; letter-spacing: .08em; text-transform: uppercase; color: #94a3b8; }

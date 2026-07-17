@@ -46,6 +46,13 @@ export async function decryptCameraSecret(cameraId: string, encoded: string) {
   return JSON.parse(clear.toString("utf8")) as CameraSecret;
 }
 
+export function formatCameraSecret(secret: CameraSecret, includeCredentials = true) {
+  const auth = includeCredentials && secret.username
+    ? `${encodeURIComponent(secret.username)}:${encodeURIComponent(secret.password ?? "")}@`
+    : "";
+  return `${secret.scheme}://${auth}${secret.host}:${secret.port}${secret.path}`;
+}
+
 export function redactRtspUrl(value: string) {
   return value.replace(/rtsps?:\/\/[^\s/]+/gi, "rtsp://[REDACTED]");
 }

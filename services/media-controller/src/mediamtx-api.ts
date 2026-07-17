@@ -10,10 +10,7 @@ async function request(method: string, endpoint: string, body?: unknown) {
     headers: body ? { "content-type": "application/json" } : undefined,
     body: body ? JSON.stringify(body) : undefined,
   });
-  if (!response.ok) {
-    const detail = await response.text();
-    throw new Error(`MEDIAMTX_${response.status}:${detail.slice(0, 200)}`);
-  }
+  if (!response.ok) throw new Error(`MEDIAMTX_${method}_${response.status}`);
   return response;
 }
 
@@ -23,10 +20,12 @@ export async function listConfiguredPaths() {
   return new Set((payload.items ?? []).map((item) => item.name));
 }
 
-export async function upsertPath(name: string, config: Record<string, unknown>, existing: Set<string>) {
-  const path = encodedPath(name);
-  if (existing.has(name)) await request("POST", `/v3/config/paths/replace/${path}`, config);
-  else await request("POST", `/v3/config/paths/add/${path}`, config);
+export async function addPath(name: string, config: Record<string, unknown>) {
+  await request("POST", `/v3/config/paths/add/${encodedPath(name)}`, config);
+}
+
+export async function replacePath(name: string, config: Record<string, unknown>) {
+  await request("POST", `/v3/config/paths/replace/${encodedPath(name)}`, config);
 }
 
 export async function deletePath(name: string) {
