@@ -39,6 +39,7 @@ export function buildPathConfigurations(camera: CameraPipeline) {
   };
   const derivedBase = {
     source: "publisher",
+    sourceOnDemand: false,
     record: false,
     runOnDemandRestart: true,
     runOnDemandStartTimeout: "20s",
