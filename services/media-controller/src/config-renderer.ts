@@ -31,41 +31,36 @@ function publishCommand(camera: CameraPipeline, variant: "video" | "webrtc-av" |
 }
 
 export function buildPathConfigurations(camera: CameraPipeline) {
-  const base = {
+  const rawBase = {
     sourceOnDemand: true,
     sourceOnDemandStartTimeout: "15s",
     sourceOnDemandCloseAfter: "30s",
     record: false,
   };
+  const derivedBase = {
+    source: "publisher",
+    record: false,
+    runOnDemandRestart: true,
+    runOnDemandStartTimeout: "20s",
+    runOnDemandCloseAfter: "30s",
+  };
   return {
     [`_internal/raw/${camera.id}`]: {
-      ...base,
+      ...rawBase,
       source: sourceUrl(camera.secret),
       rtspTransport: camera.transport === "TCP" ? "tcp" : "automatic",
     },
     [`view/${camera.id}/video`]: {
-      ...base,
-      source: "publisher",
+      ...derivedBase,
       runOnDemand: publishCommand(camera, "video"),
-      runOnDemandRestart: true,
-      runOnDemandStartTimeout: "20s",
-      runOnDemandCloseAfter: "30s",
     },
     [`view/${camera.id}/webrtc-av`]: {
-      ...base,
-      source: "publisher",
+      ...derivedBase,
       runOnDemand: publishCommand(camera, "webrtc-av"),
-      runOnDemandRestart: true,
-      runOnDemandStartTimeout: "20s",
-      runOnDemandCloseAfter: "30s",
     },
     [`view/${camera.id}/hls-av`]: {
-      ...base,
-      source: "publisher",
+      ...derivedBase,
       runOnDemand: publishCommand(camera, "hls-av"),
-      runOnDemandRestart: true,
-      runOnDemandStartTimeout: "20s",
-      runOnDemandCloseAfter: "30s",
     },
   } as Record<string, Record<string, unknown>>;
 }
